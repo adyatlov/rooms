@@ -87,7 +87,21 @@
                 lastX = e.offsetX;
                 lastY = e.offsetY;
             };
+            document.getElementById("myCanvas").ontouchstart = e => {
+                mousePressed = true;
+                sendDrawDot(e.offsetX, e.offsetY);
+                lastX = e.offsetX;
+                lastY = e.offsetY;
+            };
             document.getElementById("myCanvas").onmousemove = e => {
+                if (!mousePressed) {
+                    return
+                }
+                sendDrawLine(e.offsetX, e.offsetY, lastX, lastY);
+                lastX = e.offsetX;
+                lastY = e.offsetY;
+            };
+            document.getElementById("myCanvas").ontouchmove = e => {
                 if (!mousePressed) {
                     return
                 }
@@ -99,6 +113,12 @@
                 mousePressed = false;
             };
             document.getElementById("myCanvas").onmouseleave = () => {
+                mousePressed = false;
+            };
+            document.getElementById("myCanvas").ontouchend = () => {
+                mousePressed = false;
+            };
+            document.getElementById("myCanvas").ontouchcancel = () => {
                 mousePressed = false;
             };
         }
