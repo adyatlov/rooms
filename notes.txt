@@ -1,0 +1,20 @@
+
+type counter *uint32
+
+func newCounter() counter {
+	var zero uint32
+	return counter{&zero}
+}
+
+func (c counter) inc() {
+	atomic.Adduint32(c, uint32(1))
+}
+
+func (c counter) dec() {
+	atomic.Adduint32(c, ^uint32(0))
+}
+
+func (c counter) count() uint32 {
+	return *c
+}
+

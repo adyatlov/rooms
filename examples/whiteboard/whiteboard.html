@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <script>
+        window.onload = initCanvas;
+
+        let socket = new WebSocket("ws://localhost:8080/roomsws/v1/connect?room=whiteboard&guest=andrey&permission=send&permission=receive");
+        socket.onopen = () => {
+            console.log("[open] Connection established, send -> server");
+        };
+
+        socket.onmessage = event => {
+            let c = JSON.parse(event.data);
+            switch (c.name) {
+                case "drawLine":
+                    drawLine(c.x1, c.y1, c.x2, c.y2);
+                    break;
+                case "drawDot":
+                    drawDot(c.x, c.y);
+                    break;
+                default:
+                    console.log("Unknown command", c.name)
+            }
+        };
+
+        socket.onclose = event => {
+            if (event.wasClean) {
+                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+                // e.g. server process killed or network down
+                // event.code is usually 1006 in this case
+                console.log(`[close] Connection closed abruptly, code=${event.code} reason=${event.reason}`);
+            }
+        };
+
+        socket.onerror = error => {
+            console.log(`[error] ${error.message}`);
+        };
+        window.onkeypress = event => {
+            socket.send(event.key)
+        };
+
+        let mousePressed = false;
+        let lastX, lastY;
+        let ctx;
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+
+        function drawDot(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, ctx.lineWidth / 2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function sendDrawLine(x1, y1, x2, y2) {
+            let command = {
+                "name": "drawLine",
+                "x1": x1, "y1": y1,
+                "x2": x2, "y2": y2
+            };
+            socket.send(JSON.stringify(command))
+        }
+
+        function sendDrawDot(x, y) {
+            let command = {"name": "drawDot", "x": x, "y": y};
+            socket.send(JSON.stringify(command))
+        }
+
+        function initCanvas() {
+            ctx = document.getElementById("myCanvas").getContext("2d");
+            ctx.strokeStyle = "red";
+            ctx.fillStyle = "red";
+            ctx.lineWidth = 9;
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+
+            document.getElementById("myCanvas").onmousedown = e => {
+                mousePressed = true;
+                sendDrawDot(e.offsetX, e.offsetY);
+                lastX = e.offsetX;
+                lastY = e.offsetY;
+            };
+            document.getElementById("myCanvas").onmousemove = e => {
+                if (!mousePressed) {
+                    return
+                }
+                sendDrawLine(e.offsetX, e.offsetY, lastX, lastY);
+                lastX = e.offsetX;
+                lastY = e.offsetY;
+            };
+            document.getElementById("myCanvas").onmouseup = () => {
+                mousePressed = false;
+            };
+            document.getElementById("myCanvas").onmouseleave = () => {
+                mousePressed = false;
+            };
+        }
+    </script>
+</head>
+<body>
+<canvas id="myCanvas" width="700" height="600" style="border:2px solid black"></canvas>
+</body>
+</html>
