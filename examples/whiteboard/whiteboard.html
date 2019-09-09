@@ -6,7 +6,7 @@
     <script>
         window.onload = initCanvas;
 
-        let socket = new WebSocket("ws://localhost:8080/roomsws/v1/connect?room=whiteboard&guest=andrey&permission=send&permission=receive");
+        let socket = new WebSocket("ws://51.15.213.69:8080/roomsws/v1/connect?room=whiteboard&guest=andrey&permission=send&permission=receive");
         socket.onopen = () => {
             console.log("[open] Connection established, send -> server");
         };
